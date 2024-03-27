@@ -1,21 +1,23 @@
 package com.romzc.secondapp.presentation.screen
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import com.romzc.secondapp.databinding.ActivitySuperHeroeListBinding
-import com.romzc.secondapp.presentation.screen.detailhero.DetailSuperHeroActivity
+import com.romzc.secondapp.presentation.callbacks.OnSuperHeroClickListener
+import com.romzc.secondapp.presentation.screen.detailhero.DetailSuperHero
 import com.romzc.secondapp.presentation.screen.listhero.SuperHeroList
 import com.romzc.secondapp.presentation.viewmodel.SuperHeroListViewModel
+import com.romzc.secondapp.presentation.viewmodel.SuperHeroViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SuperHeroActivity: AppCompatActivity() {
+class SuperHeroActivity: AppCompatActivity(), OnSuperHeroClickListener  {
 
     private lateinit var binding: ActivitySuperHeroeListBinding
     private val heroesViewModel: SuperHeroListViewModel by viewModels()
+    private val selectedHeroViewModel: SuperHeroViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +38,7 @@ class SuperHeroActivity: AppCompatActivity() {
         transaction.commit()
     }
 
-    private fun navigateToDetail(id: String) {
-        val intent = Intent(this, DetailSuperHeroActivity::class.java)
-        intent.putExtra(DetailSuperHeroActivity.EXTRA_ID, id)
-        startActivity(intent)
+    override fun onSuperHeroClick(id: String) {
+        changeFragment(DetailSuperHero.newInstance())
     }
 }

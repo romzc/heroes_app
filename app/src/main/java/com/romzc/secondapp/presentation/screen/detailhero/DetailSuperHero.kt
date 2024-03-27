@@ -6,11 +6,21 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.viewModelScope
 import com.romzc.secondapp.R
 import com.romzc.secondapp.databinding.FragmentDetailSuperHeroBinding
+import com.romzc.secondapp.domain.entities.PowerStats
+import com.romzc.secondapp.domain.entities.SuperHero
 import com.romzc.secondapp.infraestructure.datasources.network.ApiService
 import com.romzc.secondapp.infraestructure.models.PowerStatsResponse
 import com.romzc.secondapp.infraestructure.models.SuperHeroDetailResponse
+import com.romzc.secondapp.presentation.composables.HeroDetailScreen
+import com.romzc.secondapp.presentation.viewmodel.SuperHeroViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +31,8 @@ import kotlin.math.roundToInt
 class DetailSuperHero : Fragment() {
 
     private lateinit var binding: FragmentDetailSuperHeroBinding
-
+    private val superHeroViewModel: SuperHeroViewModel by activityViewModels()
+    private lateinit var compose: ComposeView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -31,39 +42,24 @@ class DetailSuperHero : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentDetailSuperHeroBinding.inflate(inflater, container, false)
+        superHeroViewModel.hero.observe(viewLifecycleOwner) {
+            if (it != null) initUI(it)
+        }
         return binding.root
     }
 
-    private fun initUI(superHero: SuperHeroDetailResponse) {
-        Picasso.get().load(superHero.imageUrl.url).into(binding.ivSuperHeroDetail)
-        binding.tvSuperHeroName.text = superHero.name
-        prepareStats(superHero.powerStats)
-        binding.tvSuperHeroRealName.text = superHero.biography.fullName
-        binding.tvSuperHeroPublisher.text = superHero.biography.publisher
+    private fun initUI(superHero: SuperHero) {
+        compose = binding.composeView;
+        compose.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MaterialTheme {
+                    HeroDetailScreen(superHero = superHero)
+                }
+            }
+        }
+        Picasso.get().load(superHero.heroImage).into(binding.ivSuperHeroDetail)
     }
-
-    private fun prepareStats(powerStatsResponse: PowerStatsResponse) {
-
-        updateHeight(binding.viewCombat, powerStatsResponse.combat)
-        updateHeight(binding.viewDurability, powerStatsResponse.durability)
-        updateHeight(binding.viewIntelligence, powerStatsResponse.intelligence)
-        updateHeight(binding.viewPower, powerStatsResponse.power)
-        updateHeight(binding.viewSpeed, powerStatsResponse.speed)
-        updateHeight(binding.viewStrength, powerStatsResponse.strength)
-
-    }
-
-    private fun updateHeight(view: View, stat: String) {
-        val params = view.layoutParams
-        params.height = pxToDp(stat.toFloat())
-        view.layoutParams = params
-    }
-
-    private fun pxToDp(px: Float): Int {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px, resources.displayMetrics)
-            .roundToInt()
-    }
-
 
     companion object {
         @JvmStatic
